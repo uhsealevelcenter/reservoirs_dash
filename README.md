@@ -1,6 +1,11 @@
 
 # Hawaii fresh water reservoirs dashboard
 
+## Requirements
+
+* Requires Python 3.9
+* pip install -r requirements.txt
+
 ## Overall goal: Rewrite UHSLC fresh water reservoir dashboard using plotly dash:
 
 *  A map that displays all the stations that we have for reservoirs - already implemented
