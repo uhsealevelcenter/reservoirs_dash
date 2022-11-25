@@ -4,7 +4,7 @@
 ## Overall goal: Rewrite UHSLC fresh water reservoir dashboard using plotly dash:
 
 *  A map that displays all the stations that we have for reservoirs - already implemented
-* The data for each station containing names, station locations, and info is hosted in csv file here (one row per station): 
+* The data for each station containing names, station locations, and other info is hosted in csv file here (one row per station): 
   [https://uhslc.soest.hawaii.edu/komar/stations.csv](https://uhslc.soest.hawaii.edu/komar/stations.csv)
 * The current code already loads this CSV file
 * The timeseries data for each station is located here:
