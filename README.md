@@ -8,8 +8,8 @@
   [https://uhslc.soest.hawaii.edu/komar/stations.csv](https://uhslc.soest.hawaii.edu/komar/stations.csv)
 * The current code already loads this CSV file
 * The timeseries data for each station is located here:
-  [https://uhslc.soest.hawaii.edu/komar/<station_id>.csv](https://uhslc.soest.hawaii.edu/komar/EDD00214.csv)
-  Where <station_id> can be any of the station ids listed in the id column in the stations.csv file mentioned above (e.g. Waita station has id EDD00214)
+  [https://uhslc.soest.hawaii.edu/reservoir/<station_id>.csv](https://uhslc.soest.hawaii.edu/reservoir/EDD00214.csv)
+  Where <station_id> can be any of the station ids listed in the id column in the stations.csv file mentioned above (e.g. Waita station has id EDD00214). That way we can 'map' the station id to the timeseries data. In other words, the timeseries data for each station is located at the URL that is constructed by appending the station id to the base URL ([https://uhslc.soest.hawaii.edu/reservoir/](https://uhslc.soest.hawaii.edu/reservoir/)) so we can dynamically load the timeseries data for each station. 
 * The desired behavior (just as the current JavaScript website functions) is as following:
     * Clicking on a station should create/update new plotly graph showing the water level and battery level data for each station
     * Have a table that lists all the stations (similar to the way it is done now, it does not have to look the same) so the map and the graph update based on what we click in the table. For example, if we select a station in the table, the map will pan to that station.
