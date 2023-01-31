@@ -1,37 +1,41 @@
 import os
 import pandas as pd
 import numpy as np
+import pytz
+import time
+from datetime import datetime
 import plotly.graph_objects as go
 
-
-stations_csv = 'https://uhslc.soest.hawaii.edu/komar/stations.csv'
-df = pd.read_csv(stations_csv)
+global data
+STATION_ID = ""
 token = os.environ.get('MAPBOX_TOKEN')
 
+stations_url = 'https://uhslc.soest.hawaii.edu/komar/stations.csv'
+stations_general = pd.read_csv(stations_url)
 
-def get_longitude():
-    return df.X
+def get_longitude(id=""):
+    return stations_general.X if not id else stations_general[stations_general.id==id].X.values[0]
 
-def get_latitude():
-    return df.Y
+def get_latitude(id=""):
+    return stations_general.Y if not id else stations_general[stations_general.id==id].Y.values[0]
 
 def get_locations_name():
-    return df.name
+    return stations_general.name
 
 def get_stations_table_data(column_names):
-    stations_table = df[column_names]
+    stations_table = stations_general[column_names]
     table_data = stations_table.to_dict('records')
     
     return table_data
 
 def get_stations_dropdown_options():
-    data = df.to_dict('records')
-    options = [f'{record["id"]} {record["dlnrid"]} {record["name"]}' for record in data]
-    return [{'label': opt, 'value': opt} for opt in options]
+    data = stations_general.to_dict('records')
+    options = [(f'{record["id"]} {record["dlnrid"]} {record["name"]}', record["id"]) for record in data]
+    return [{'label': opt[0], 'value': opt[1]} for opt in options]
 
 def get_on_off_alert(station_id):
-    return {"off": df[df.id==station_id].level_alert_off.values[0], 
-            "on": df[df.id==station_id].level_alert_on.values[0]}
+    return {"off": stations_general[stations_general.id==station_id].level_alert_off.values[0], 
+            "on": stations_general[stations_general.id==station_id].level_alert_on.values[0]}
 
 def draw_map():
     fig = go.Figure(go.Scattermapbox(
@@ -50,7 +54,7 @@ def draw_map():
         mapbox=dict(
             accesstoken=token,
             bearing=0,
-            center=dict(
+            center=go.layout.mapbox.Center(
                 lat=21,
                 lon=-158
             ),
@@ -60,6 +64,7 @@ def draw_map():
         margin = dict(l=0, r=0, t=0, b=0)
     )
     return fig
+
 
 def populate_data(row, date, time, battery, water_level):
     time.append(date)
@@ -72,15 +77,26 @@ def populate_data(row, date, time, battery, water_level):
     return time, battery, water_level
 
 
+def convert_to_hst(str_date):
+    date = datetime.strptime(str_date, "%Y-%m-%dT%H:%M:%SZ")
+    date = date.astimezone(pytz.timezone('Pacific/Honolulu'))
+    return date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _get_water_level_graph(station_id, is_gmt):
-    df = pd.read_csv("data.csv")
+    global STATION_ID, data
+    if station_id != STATION_ID:
+        STATION_ID = station_id
+        data = pd.read_csv(f"https://uhslc.soest.hawaii.edu/reservoir/{station_id}.csv")
+        data = data.to_dict('records')
+
     all_values = []
     time1, battery1, water_level1 = [], [], []
     time6, battery6, water_level6 = [], [], []
 
-    for i in range(len(df)):
-        if df.at[i, "data"] > -10000 and df.at[i, "data"] < 99999 and df.at[i, "txtype"] != "q":
-            all_values.append(df.at[i, "data"])
+    for row in data:
+        if row["data"] > -10000 and row["data"] < 99999 and row["txtype"] != "q":
+            all_values.append(row["data"])
 
     stdev = np.std(all_values) if len(all_values) else np.nan
     mean = np.mean(all_values) if len(all_values) else np.nan
@@ -93,10 +109,8 @@ def _get_water_level_graph(station_id, is_gmt):
 
     water_alerts = get_on_off_alert(station_id)
 
-    for i in range(len(df)):
-        row = df.loc[i]
-        mydate = row['date']
-        #TODO add timezone conversion for mydate
+    for row in data:
+        mydate = row['date'] if is_gmt else convert_to_hst(row['date'])
 
         if row['txtype'] == 1:
             time1, battery1, water_level1 = populate_data(row, mydate, time1, battery1, water_level1)
@@ -105,6 +119,7 @@ def _get_water_level_graph(station_id, is_gmt):
             time6, battery6, water_level6 = populate_data(row, mydate, time6, battery6, water_level6)
 
     return time1, water_level1, time6, water_level6, battery1, battery6, water_alerts, minval, maxval
+
 
 def draw_graphs(station_id, is_gmt):
 

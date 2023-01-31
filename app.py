@@ -1,4 +1,4 @@
-from dash import Input, Output
+from dash import Input, Output, State, ctx
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
@@ -11,11 +11,11 @@ stations_table_data = get_stations_table_data(raw_columns)
 stations_table_columns = ["stnid", "dlnrid", "name", "lat", "lon"]
 
 fig_map = draw_map()
-fig_water_level, fig_bat_voltage = draw_graphs("EDD024F8", True)
+fig_water_level, fig_bat_voltage = draw_graphs("EDD067F2", True)
 
 app.layout = html.Div(className="container", children=[
     html.Div(className="container", children=[
-        dcc.Graph(figure=fig_map)
+        dcc.Graph(id="mapbox_fig", figure=fig_map)
     ]),
     html.Br(),
     html.Div(
@@ -83,7 +83,6 @@ app.layout = html.Div(className="container", children=[
                         },
                         fixed_rows={'headers': True},
                     ),
-                    html.P(id="table_selected", children="AAAa")
                 ])
         ]
     ),
@@ -92,18 +91,46 @@ app.layout = html.Div(className="container", children=[
                 style={"text-align": "center", "font-weight": "bold"}
                 )),
         dcc.Graph(
+            id='fig_water_level',
             figure=fig_water_level
         ),
         html.Br(),
-        dcc.Graph(figure=fig_bat_voltage)
+        dcc.Graph(id="fig_bat_voltage", figure=fig_bat_voltage)
     ])
 
 
 @app.callback(
-    Output('table_selected', 'children'),
-    Input('stations_table', 'active_cell'))
-def update_graphs(active_cell):
-    return str(active_cell) if active_cell else "Click the table"
+    Output('station-title', 'children'),
+    Output('fig_water_level', 'figure'),
+    Output('fig_bat_voltage', 'figure'),
+    Output('stations_dropdown', 'value'),
+    Output('stations_table', 'active_cell'),
+    Output('stations_table', 'selected_cells'),
+    Input('stations_table', 'active_cell'),
+    Input('stations_dropdown', 'value'),
+    Input("hst-button", "n_clicks_timestamp"),
+    Input("gmt-button", "n_clicks_timestamp"),
+    State('stations_table', 'selected_cells') )
+def update_graphs(active_cell, station_dropdown, hst_button, gmt_button, selected_cells):
+    trigger = ctx.triggered_id
+    hst_button = 0 if not hst_button else hst_button
+    gmt_button = 0 if not gmt_button else gmt_button
+    is_gmt = True if gmt_button >= hst_button else False
+    if trigger == 'stations_table' or active_cell:
+        station_id = active_cell["row_id"]
+        dd_value = None
+        table_cell = active_cell
+
+        fig_water_level, fig_bat_voltage = draw_graphs(station_id, is_gmt)
+        return str(active_cell), station_id, fig_water_level, fig_bat_voltage, dd_value, table_cell, selected_cells
+    elif trigger == 'stations_dropdown' or station_dropdown:
+        station_id = station_dropdown
+        dd_value = station_dropdown
+        table_cell = None
+        fig_water_level, fig_bat_voltage = draw_graphs(station_id, is_gmt)
+        return station_id, fig_water_level, fig_bat_voltage, dd_value, table_cell, []
+
+    return "Naslov", go.Figure(), go.Figure(), None, None, []
 
 
 @app.callback(
