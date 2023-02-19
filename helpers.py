@@ -5,6 +5,9 @@ import pytz
 import time
 from datetime import datetime
 import plotly.graph_objects as go
+from csv import DictReader
+import codecs
+import urllib
 
 global data
 STATION_ID = ""
@@ -37,20 +40,57 @@ def get_on_off_alert(station_id):
     return {"off": stations_general[stations_general.id==station_id].level_alert_off.values[0], 
             "on": stations_general[stations_general.id==station_id].level_alert_on.values[0]}
 
+# def draw_map():
+#     locations = [go.Scattermapbox(
+#         lon=get_longitude(),
+#         lat=get_latitude(),
+#         mode='markers',
+#         marker={'color': 'green'},
+#         unselected={'marker': {'opacity':1}},
+#         selected_marker={'marker': {'opacity':0.5, 'size':25}},
+#         customdata=stations_general['id']
+#     )]
+#     return {
+#         'data': locations,
+#         'layout': go.Layout(
+#             uirevision='foo',
+#             clickmode="event+select",
+#             hovermode='closest',
+#             mapbox=dict(
+#                 accesstoken=token,
+#                 bearing=25,
+#                 pitch=40,
+#                 zoom=6,
+#                 center=go.layout.mapbox.Center(lat=21, lon=-158),
+#             ),
+#             margin = dict(l=0, r=0, t=0, b=0)
+#         )
+#     }
+
+
 def draw_map():
     fig = go.Figure(go.Scattermapbox(
         lat=get_latitude(),
         lon=get_longitude(),
         mode='markers',
         marker=go.scattermapbox.Marker(
-            size=9
+            size=9, color='green'
         ),
+        selected=go.scattermapbox.Selected(
+            marker = {
+                "color":"red",
+                "size":25,
+                'opacity': 0.3
+                }
+            ),
         text=get_locations_name(),
+        customdata=stations_general['id'],
     ))
 
     fig.update_layout(
-        autosize=True,
+        uirevision='foo',
         hovermode='closest',
+        clickmode='event+select',
         mapbox=dict(
             accesstoken=token,
             bearing=0,
@@ -59,7 +99,8 @@ def draw_map():
                 lon=-158
             ),
             pitch=0,
-            zoom=6
+            zoom=6,
+            style="open-street-map"
         ),
         margin = dict(l=0, r=0, t=0, b=0)
     )
@@ -68,9 +109,10 @@ def draw_map():
 
 def populate_data(row, date, time, battery, water_level):
     time.append(date)
-    battery.append(row['bv'])
-    if row['data'] > -10000 and row['data'] < 99999:
-        water_level.append(row['data'] / 100)
+    battery.append(float(row['bv']))
+    row_data = int(row['data'])
+    if row_data > -10000 and row_data < 99999:
+        water_level.append(row_data / 100)
     else:
         water_level.append(np.nan)
     
@@ -87,16 +129,23 @@ def _get_water_level_graph(station_id, is_gmt):
     global STATION_ID, data
     if station_id != STATION_ID:
         STATION_ID = station_id
-        data = pd.read_csv(f"https://uhslc.soest.hawaii.edu/reservoir/{station_id}.csv")
-        data = data.to_dict('records')
+        t1 = time.time()
+        res = urllib.request.urlopen(f"https://uhslc.soest.hawaii.edu/reservoir/{station_id}.csv")
+        data = list(DictReader(codecs.iterdecode(res, encoding="utf-8"), delimiter=","))
+        t2 = time.time()
+        print("read ", t2-t1)
 
     all_values = []
     time1, battery1, water_level1 = [], [], []
     time6, battery6, water_level6 = [], [], []
-
+    
+    t1 = time.time()
     for row in data:
-        if row["data"] > -10000 and row["data"] < 99999 and row["txtype"] != "q":
-            all_values.append(row["data"])
+        row_data = int(row["data"])
+        if row_data > -10000 and row_data < 99999 and int(row["txtype"]) != "q":
+            all_values.append(row_data)
+    t2 = time.time()
+    print("loop 1 ", t2-t1)
 
     stdev = np.std(all_values) if len(all_values) else np.nan
     mean = np.mean(all_values) if len(all_values) else np.nan
@@ -108,16 +157,18 @@ def _get_water_level_graph(station_id, is_gmt):
         maxval = (mean + 6*stdev)/100
 
     water_alerts = get_on_off_alert(station_id)
-
+    
+    t1 = time.time()
     for row in data:
         mydate = row['date'] if is_gmt else convert_to_hst(row['date'])
 
-        if row['txtype'] == 1:
+        if int(row['txtype']) == 1:
             time1, battery1, water_level1 = populate_data(row, mydate, time1, battery1, water_level1)
 
-        elif row['txtype'] == 6:
+        elif int(row['txtype']) == 6:
             time6, battery6, water_level6 = populate_data(row, mydate, time6, battery6, water_level6)
-
+    t2 = time.time()
+    print("loop 1 ", t2-t1)
     return time1, water_level1, time6, water_level6, battery1, battery6, water_alerts, minval, maxval
 
 
