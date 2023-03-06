@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 
 app = dash.Dash(
     "UHSLC",
-    # assets_folder = 'app/assets',
+    assets_folder = 'app/assets',
     # external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
 

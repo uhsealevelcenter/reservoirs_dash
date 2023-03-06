@@ -40,63 +40,36 @@ def get_on_off_alert(station_id):
     return {"off": stations_general[stations_general.id==station_id].level_alert_off.values[0], 
             "on": stations_general[stations_general.id==station_id].level_alert_on.values[0]}
 
-# def draw_map():
-#     locations = [go.Scattermapbox(
-#         lon=get_longitude(),
-#         lat=get_latitude(),
-#         mode='markers',
-#         marker={'color': 'green'},
-#         unselected={'marker': {'opacity':1}},
-#         selected_marker={'marker': {'opacity':0.5, 'size':25}},
-#         customdata=stations_general['id']
-#     )]
-#     return {
-#         'data': locations,
-#         'layout': go.Layout(
-#             uirevision='foo',
-#             clickmode="event+select",
-#             hovermode='closest',
-#             mapbox=dict(
-#                 accesstoken=token,
-#                 bearing=25,
-#                 pitch=40,
-#                 zoom=6,
-#                 center=go.layout.mapbox.Center(lat=21, lon=-158),
-#             ),
-#             margin = dict(l=0, r=0, t=0, b=0)
-#         )
-#     }
-
-
-def draw_map():
+def draw_map(id="", selected_point=[]):
+    lat = get_latitude(id) if id else 21
+    lon = get_longitude(id) if id else -158
     fig = go.Figure(go.Scattermapbox(
-        lat=get_latitude(),
-        lon=get_longitude(),
-        mode='markers',
-        marker=go.scattermapbox.Marker(
-            size=9, color='green'
+    lat=get_latitude(),
+    lon=get_longitude(),
+    mode='markers',
+    marker={'size':9, 'color':'green'},
+    selected=go.scattermapbox.Selected(
+        marker = {
+            "color":"darkred",
+            "size":18,
+            }
         ),
-        selected=go.scattermapbox.Selected(
-            marker = {
-                "color":"red",
-                "size":25,
-                'opacity': 0.3
-                }
-            ),
-        text=get_locations_name(),
-        customdata=stations_general['id'],
+    selectedpoints=selected_point
+    # text=get_locations_name(),
+    # customdata=stations_general['id']
+
     ))
 
     fig.update_layout(
-        uirevision='foo',
+        autosize=True,
         hovermode='closest',
         clickmode='event+select',
         mapbox=dict(
             accesstoken=token,
             bearing=0,
             center=go.layout.mapbox.Center(
-                lat=21,
-                lon=-158
+                lat=lat,
+                lon=lon
             ),
             pitch=0,
             zoom=6,
