@@ -32,14 +32,14 @@ def update_graphs(active_cell, station_dropdown, hst_button, gmt_button, map_dat
         return station_id, fig_water_level, fig_bat_voltage, dd_value, table_cell, selected_cells
     elif trigger == 'stations_dropdown':
         station_id = dd_value = station_dropdown
-        table_cell = [station for station in stations_table if station['id']==station_id][0]
+        # table_cell = [station for station in stations_table if station['id']==station_id][0]
         fig_water_level, fig_bat_voltage = draw_graphs(station_id, is_gmt)
-        return station_id, fig_water_level, fig_bat_voltage, dd_value, table_cell, []
+        return station_id, fig_water_level, fig_bat_voltage, dd_value, None, []
     elif trigger == 'fig_map':
         station_id = dd_value = map_data['points'][0]['customdata']
-        table_cell = [station for station in stations_table if station['id']==station_id][0]
+        # table_cell = [station for station in stations_table if station['id']==station_id][0]
         fig_water_level, fig_bat_voltage = draw_graphs(station_id, is_gmt)
-        return station_id, fig_water_level, fig_bat_voltage, dd_value, table_cell, []
+        return station_id, fig_water_level, fig_bat_voltage, dd_value, None, []
 
     return "Station", go.Figure(), go.Figure(), None, None, []
 
@@ -73,9 +73,3 @@ def update_button_style(hst_n_clicks, gmt_n_clicks):
         hst_n_clicks = 0
     return ["button-active", "button-inactive"] if hst_n_clicks > gmt_n_clicks else ["button-inactive", "button-active"]
 
-# @app.callback(
-#     Output("test", "children"),
-#     Input("mapbox_fig", "clickData")
-# )
-# def test(click_data):
-#     return click_data
