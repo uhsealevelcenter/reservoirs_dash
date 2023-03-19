@@ -574,33 +574,7 @@ Table of contents
     100% { content: "Loading..."; }
   }
   
-  *[data-dash-is-loading="true"] {
-    visibility: hidden;
-  }
-  
-  /* Display Loading... if component still loads after 2seconds */
-  *[data-dash-is-loading="true"]::before {
-    font-size: 15px;
-    font-weight: bold;
-    content: "";
-    position: absolute;
-    color: #004d99;
-    animation: contentword 2s forwards, fadein 2s forwards, load_visibility 2s forwards;
-  }
-  /* Do not display Loading... while graph in InVitro Modeller is loading */
-  #tab4-model-graph[data-dash-is-loading="true"] {
-    visibility: visible;
-  }
-  
-  #tab4-model-graph[data-dash-is-loading="true"]::before {
-    font-size: 15px;
-    font-weight: bold;
-    content: "Loading...";
-    display: inline;
-    color: #004d99;
-    visibility: hidden;
-  }
-  
+ 
   .dash-spreadsheet.dash-freeze-left {
     max-width: none !important;
   }

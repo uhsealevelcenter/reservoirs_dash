@@ -1,10 +1,8 @@
 import dash
-import dash_bootstrap_components as dbc
 
 app = dash.Dash(
     "UHSLC",
-    assets_folder = 'app/assets',
-    # external_stylesheets=[dbc.themes.BOOTSTRAP]
+    assets_folder = 'assets'
 )
 
 server = app.server
