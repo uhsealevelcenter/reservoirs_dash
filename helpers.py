@@ -56,7 +56,7 @@ def draw_map(id="", selected_point=[]):
         marker={"size": 9, "color": "green", "opacity": 1},
         selected=go.scattermapbox.Selected(
             marker={
-                "color": "darkred",
+                "color": "skyblue",
                 "size": 18,
             }
         ),
@@ -69,6 +69,7 @@ def draw_map(id="", selected_point=[]):
         autosize=True,
         hovermode="closest",
         clickmode="event+select",
+        mapbox_style="carto-positron",
         mapbox=dict(
             accesstoken=token,
             bearing=0,

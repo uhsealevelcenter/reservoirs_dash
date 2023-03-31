@@ -6,6 +6,6 @@ app = dash.Dash(
 )
 
 server = app.server
-app.config.suppress_callback_exceptions = False
+app.config.suppress_callback_exceptions = True
 app.title = "UHSLC"
 app.description = ""

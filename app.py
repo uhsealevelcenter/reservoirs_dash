@@ -1,7 +1,5 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import Output, Input, dcc, html
 import dash_table
-from dash import Output, Input
 
 from server import app
 from callbacks import *
